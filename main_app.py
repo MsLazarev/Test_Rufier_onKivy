@@ -19,7 +19,7 @@ def check_int(str_num):
 class BonusScr(Screen):
     def __init__(self, name="Bonus"):
         super().__init__(name=name)
-        self.shrek = Image(source = r'C:\Users\Misha\Desktop\Разные_коды\images\sadShrek.jpeg')
+        self.shrek = Image(source = r'sadShrek.jpeg')
         self.label = Label(text="Возраст должен быть от 7 до 16 лет")
         self.btn_back = Button(text="Вернуться")
         self.btn_exit = Button(text="Выход")
