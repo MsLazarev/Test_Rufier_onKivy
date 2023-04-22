@@ -10,6 +10,39 @@ from instructions import *
 from ruffier import *
 from seconds import *
 
+def check_int(str_num):
+    try:
+        return int(str_num)
+    except:
+        return False
+
+class BonusScr(Screen):
+    def __init__(self, name="Bonus"):
+        super().__init__(name=name)
+        self.shrek = Image(source = r'C:\Users\Misha\Desktop\Разные_коды\images\sadShrek.jpeg')
+        self.label = Label(text="Возраст должен быть от 7 до 16 лет")
+        self.btn_back = Button(text="Вернуться")
+        self.btn_exit = Button(text="Выход")
+        self.v_box = BoxLayout(orientation="vertical")
+        self.h_box = BoxLayout()
+        self.h_box.add_widget(self.btn_exit)
+        self.h_box.add_widget(self.btn_back)
+        self.v_box.add_widget(self.label)
+        self.v_box.add_widget(self.h_box)
+        self.mainbox = BoxLayout()
+        self.mainbox.add_widget(self.shrek)
+        self.mainbox.add_widget(self.v_box)
+        self.add_widget(self.mainbox)
+
+        self.btn_back.on_press = self.back
+        self.btn_exit.on_press = self.exit
+
+    def back(self):
+        self.manager.transition.direction = "up"
+        self.manager.current = "instr"
+    def exit(self):
+        exit()
+
 class FinalScr(Screen):
     def __init__(self, name="final"):
         super().__init__(name=name)
@@ -36,39 +69,81 @@ class PulseScreen2(Screen):
     def __init__(self, name="fourth"):
         super().__init__(name=name)
 
-        self.lab = Label(text=txt_test3, size_hint=(1, 13))
+        self.stage = 0
+        self.firstBox = BoxLayout()
+        self.secondBox = BoxLayout()
+        self.next_screen = False
+        self.lbl_sec = Seconds(3)
 
-        firstBox = BoxLayout()
+        self.lab = Label(text=txt_test3, size_hint=(1, 3.5))
         self.first_answer = Label(text="Результат:")
         self.ti_first = TextInput(text="", halign="left", focus=False, multiline=False)
-        firstBox.add_widget(self.first_answer)
-        firstBox.add_widget(self.ti_first)
+        self.firstBox.add_widget(self.first_answer)
+        self.firstBox.add_widget(self.ti_first)
 
-        secondBox = BoxLayout()
+        self.relax = Label(text="Замеряйте пульс после нажатия кнопки")
+        self.time_box = BoxLayout(orientation="vertical", spacing=3, size_hint=(1, 6))
+        self.time_box.add_widget(self.relax)
+
         self.second_answer = Label(text="Результат после отдыха:")
         self.ti_second = TextInput(text="", halign="left", focus=False, multiline=False)
-        secondBox.add_widget(self.second_answer)
-        secondBox.add_widget(self.ti_second)
+        self.secondBox.add_widget(self.second_answer)
+        self.secondBox.add_widget(self.ti_second)
 
-        self.btn = Button(text="Завершить", size_hint=(0.3, 3), pos_hint={"center_x": 0.5})
+        self.btn = Button(text="Начать", size_hint=(0.3, 3), pos_hint={"center_x": 0.5})
 
-        main_box = BoxLayout(orientation="vertical", spacing=10, padding=30)
-        main_box.add_widget(self.lab)
-        main_box.add_widget(firstBox)
-        main_box.add_widget(secondBox)
-        main_box.add_widget(self.btn)
+        self.main_box = BoxLayout(orientation="vertical", spacing=10, padding=30)
+        self.main_box.add_widget(self.lab)
+        self.main_box.add_widget(self.time_box)
+        self.main_box.add_widget(self.firstBox)
+        self.main_box.add_widget(self.secondBox)
+        self.main_box.add_widget(self.btn)
 
-        self.add_widget(main_box)
+        self.add_widget(self.main_box)
+
+        self.ti_first.set_disabled(True)
+        self.ti_second.set_disabled(True)
+        #self.btn.set_disabled(True)
 
         self.btn.on_press = self.next
+        self.lbl_sec.bind(done=self.sec_finished)
 
+    def sec_finished(self, a, b):
+        if self.lbl_sec.done:
+            if self.stage == 0:
+                self.stage = 1
+                self.relax.text = "Отдыхайте(30 сек)"
+                self.lbl_sec.restart(5)
+                self.ti_first.set_disabled(False)
+            elif self.stage == 1:
+                self.stage = 2
+                self.lbl_sec.restart(5)
+                self.relax.text = "Замеряйте пульс(15 сек)"
+            elif self.stage == 2:
+                self.relax.text = "Переходите к следующему экрану"
+                self.btn.text = "Дальше"
+                self.ti_second.set_disabled(False)
+                self.btn.set_disabled(False)
     def next(self):
         global P2
         global P3
-        P2 = self.ti_first.text
-        P3 = self.ti_second.text
-        self.manager.transition.direction = "left"
-        self.manager.current = "final"
+        if self.stage < 1:
+            self.btn.set_disabled(True)
+            self.lbl_sec.start()
+            self.relax.text = "Замеряйте пульс(15 сек)"
+            self.time_box.add_widget(self.lbl_sec)
+        else:
+            P2 = check_int(self.ti_first.text)
+            P3 = check_int(self.ti_second.text)
+            if P2 == False or P2 <= 0:
+                P2 = 0
+                self.ti_first.text = str(P2)
+            if P3 == False or P3 <= 0:
+                P3 = 0
+                self.ti_second.text = str(P3)
+            else:
+                self.manager.transition.direction = "left"
+                self.manager.current = "final"
 
 
 class SitsScreen(Screen):
@@ -93,25 +168,26 @@ class PulseScreen1(Screen):
     def __init__(self, name="second"):
         super().__init__(name=name)
         self.next_screen = False 
-        self.lbl_sec = Seconds(15)
+        self.lbl_sec = Seconds(3)
 
-        self.lab = Label(text=txt_test1, size_hint=(1, 10))        
-        ti_box = BoxLayout()
+        self.lab = Label(text=txt_test1, size_hint=(1, 10))
+        self.ti_box = BoxLayout()
         self.answer = Label(text="Введите результат:")
         self.ti_answer = TextInput(text="", halign="left", focus=False, multiline=False)
-        ti_box.add_widget(self.answer)
-        ti_box.add_widget(self.ti_answer)
+        self.ti_box.add_widget(self.answer)
+        self.ti_box.add_widget(self.ti_answer)
+
+        self.time_box = BoxLayout()
 
         self.btn = Button(text = "Старт", size_hint=(0.3, 3), pos_hint={"center_x": 0.5})
 
         self.main_box = BoxLayout(orientation="vertical", spacing = 10, padding=30)
 
         self.main_box.add_widget(self.lab)
-        self.main_box.add_widget(ti_box)
+        self.main_box.add_widget(self.time_box)
+        self.main_box.add_widget(self.ti_box)
         self.main_box.add_widget(self.btn)
 
-        self.timer = Label(text=self.lbl_sec.text)
-        self.main_box.add_widget(self.timer)
 
         self.add_widget(self.main_box)
 
@@ -130,11 +206,15 @@ class PulseScreen1(Screen):
         if not self.next_screen:
             self.btn.set_disabled(True)
             self.lbl_sec.start()
-            self.main_box.add_widget(self.lbl_sec)
+            self.time_box.add_widget(self.lbl_sec)
         else:
-            P1 = self.ti_answer.text
-            self.manager.transition.direction = "left"
-            self.manager.current = "third"
+            P1 = check_int(self.ti_answer.text)
+            if P1 == False or P1 <= 0:
+                P1 = 0
+                self.ti_answer.text = str(P1)
+            else:
+                self.manager.transition.direction = "left"
+                self.manager.current = "third"
 
 class InstrScr(Screen):
     def __init__(self, name="instr"):
@@ -170,9 +250,13 @@ class InstrScr(Screen):
         global username
         global userage
         username += self.ti_name.text
-        userage += int(self.ti_age.text)
-        self.manager.transition.direction = "left"
-        self.manager.current = "second"
+        userage = check_int(self.ti_age.text)
+        if userage == False or userage < 7 or userage > 16:
+            self.manager.transition.direction = "down"
+            self.manager.current = "Bonus"
+        else:
+            self.manager.transition.direction = "left"
+            self.manager.current = "second"
 
 userage = 0
 username = ""
@@ -183,6 +267,7 @@ class HeartCheckApp(App):
     def build(self):
         sm = ScreenManager()
         sm.add_widget(InstrScr(name="instr"))
+        sm.add_widget(BonusScr(name="Bonus"))
         sm.add_widget(PulseScreen1(name="second"))
         sm.add_widget(SitsScreen(name="third"))
         sm.add_widget(PulseScreen2(name="fourth"))
@@ -190,94 +275,3 @@ class HeartCheckApp(App):
         return sm
 
 HeartCheckApp().run()
-
-# class ScrButton(Button):
-#     def __init__(self, screen, direction="right", goal="main", **kwargs):
-#         super().__init__(**kwargs)
-#         self.screen = screen
-#         self.direction = direction
-#         self.goal = goal
-#     def on_press(self):
-#         self.screen.manager.transition.direction = self.direction
-#         self.screen.manager.current = self.goal
-
-# class ScrFirstButton(Screen):
-#     def __init__(self, name="first"):
-#         super().__init__(name=name)
-#         first_box = BoxLayout()
-#         skala = Image(source = r'C:\Users\Misha\Desktop\Разные_коды\images\skala.jpg')
-#         btn_first = ScrButton(self, direction = "left", goal = "main", text = "back", size_hint=(0.3, 1))
-#         btn_first.on_press = btn_first.on_press
-#         first_box.add_widget(skala)
-#         first_box.add_widget(btn_first)
-#         self.add_widget(first_box)
-
-# class ScrSecondButton(Screen):
-#     def __init__(self, name="second"):
-#         super().__init__(name=name)
-#         second_box = BoxLayout(orientation="vertical")
-#         pump = VideoPlayer(source = r"C:\Users\Misha\Videos\Captures\esskeetit.mp4", state='play', options={'fit_mode': 'contain'})
-#         #pump.state = "play"
-#         #pump.options = {"eos": "loop"}
-#         #pump.allow_stretch = True
-#         #pump.options = {'fit_mode': 'contain'}
-#         #btn_second = ScrButton(self, direction = "up", goal = "main", text = "back", size_hint=(1, 0.3))
-#         #btn_second.on_press = btn_second.on_press
-#         second_box.add_widget(pump)
-#         #second_box.add_widget(btn_second)
-#         self.add_widget(second_box)
-
-# class ScrThirdButton(Screen):
-#     def __init__(self, name="third"):
-#         super().__init__(name=name)
-#         btn_third = ScrButton(self, direction = "down", goal = "main", text = "back")
-#         btn_third.on_press = btn_third.on_press
-#         self.add_widget(btn_third)
-
-# class ScrFourthButton(Screen):
-#     def __init__(self, name="fourth"):
-#         super().__init__(name=name)
-#         fourth_box = BoxLayout()
-#         shrek = Image(source = r'C:\Users\Misha\Desktop\Разные_коды\images\shrek.jpg')
-#         btn_fourth = ScrButton(self, direction = "right", goal = "main", text = "back", size_hint=(0.3, 1))
-#         btn_fourth.on_press = btn_fourth.on_press
-#         fourth_box.add_widget(btn_fourth)
-#         fourth_box.add_widget(shrek)
-#         self.add_widget(fourth_box)
-
-# class MainScreen(Screen):
-#     def __init__(self, name="main"):
-#         super().__init__(name=name)
-#         main_box = BoxLayout(orientation = "horizontal")#padding = 8 spacing = 8)
-#         first_box = BoxLayout(orientation = 'vertical')
-#         second_box = BoxLayout(orientation = "vertical")
-#         third_box = BoxLayout(orientation = "vertical")
-#         btn1 = ScrButton(self, direction = "right", goal = "first", text = "1")
-#         btn1.on_press = btn1.on_press
-#         btn2 = ScrButton(self, direction = "down", goal = "second", text = "2")
-#         btn2.on_press = btn2.on_press
-#         btn3 = ScrButton(self, direction = "up", goal = "third", text = "3")
-#         btn3.on_press = btn3.on_press
-#         btn4 = ScrButton(self, direction = "left", goal = "fourth", text = "4")
-#         btn4.on_press = btn4.on_press
-#         first_box.add_widget(btn1)
-#         second_box.add_widget(btn2)
-#         second_box.add_widget(btn3)
-#         third_box.add_widget(btn4)
-#         main_box.add_widget(first_box)
-#         main_box.add_widget(second_box)
-#         main_box.add_widget(third_box)
-#         self.add_widget(main_box)
-
-# class MyApp(App):
-#     def build(self):
-#         #return Button()
-#         sm = ScreenManager()
-#         sm.add_widget(MainScreen(name = "main"))
-#         sm.add_widget(ScrFirstButton(name = "first"))
-#         sm.add_widget(ScrSecondButton(name = "second"))
-#         sm.add_widget(ScrThirdButton(name = "third"))
-#         sm.add_widget(ScrFourthButton(name = "fourth"))
-#         return sm
-
-# MyApp().run()
